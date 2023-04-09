@@ -1,0 +1,50 @@
+{% extends 'admin-template.html' %} {% block content %}
+<form action="/add/position" , method="post">
+  <div class="form-group row">
+    <label for="name" class="col-sm-2 col-form-label"
+      >Name of the Position</label
+    >
+    <div class="col-sm-10">
+      <input
+        required
+        type="text"
+        class="form-control"
+        id="name"
+        placeholder="Name of the Position"
+        name="name"
+      />
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">Add Position</button>
+</form>
+<div class="row mt-4">
+  <div class="col-sm-12">
+    <h3>Positions</h3>
+  </div>
+  <div class="col-sm-12 pt-2">
+    <table class="table table-striped position-table">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for position in positions %}
+        <tr>
+          <td>{{ position.name }}</td>
+          <td>
+            <a href="/edit/position/{{ position._id }}" class="btn btn-primary"
+              >Edit</a
+            >
+            <a href="/delete/position/{{ position._id }}" class="btn btn-danger"
+              >Delete</a
+            >
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
