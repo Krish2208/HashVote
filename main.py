@@ -7,6 +7,9 @@ from pip._vendor import cachecontrol
 import google.auth.transport.requests
 import requests
 import pymongo
+from bson import ObjectId
+import string
+import random
 
 app = Flask(__name__)
 app.secret_key = "hashvote"
@@ -73,6 +76,12 @@ client = pymongo.MongoClient(
 db = client.test
 
 
+def unique_id(size):
+    chars = list(set(string.ascii_uppercase +
+                 string.digits).difference('LIO01'))
+    return ''.join(random.choices(chars, k=size))
+
+
 def login_is_required(function):
     def wrapper(*args, **kwargs):
         if "google_id" not in session:
@@ -80,6 +89,17 @@ def login_is_required(function):
         else:
             return function()
     return wrapper
+
+
+def admin_is_required(function):
+    def admin_wrap(*args, **kwargs):
+        if "google_id" not in session:
+            return redirect("/")
+        elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+            return redirect("/")
+        else:
+            return function()
+    return admin_wrap
 
 
 @app.route('/')
@@ -94,7 +114,7 @@ def role():
     if "google_id" not in session:
         return redirect("/")
     else:
-        if session["email"] in ["ceo@iiti.ac.in"]:
+        if session["email"] in ["cse210001034@iiti.ac.in"]:
             return redirect("/admin")
         else:
             return redirect("/vote")
@@ -110,6 +130,7 @@ def login():
 def login_google():
     authorization_url, state = flow.authorization_url()
     session['state'] = state
+    session.modified = True
     return redirect(authorization_url)
 
 
@@ -122,7 +143,7 @@ def logout():
 @app.route('/callback')
 def callback():
     flow.fetch_token(authorization_response=request.url)
-    if not session["state"] == request.args["state"]:
+    if session["state"] != request.args["state"]:
         abort(500)  # State does not match!
 
     credentials = flow.credentials
@@ -145,6 +166,7 @@ def callback():
 
 
 @app.route('/admin')
+@admin_is_required
 def admin():
     return render_template('admin-template.html')
 
@@ -162,16 +184,24 @@ def voting():
 
 @app.route('/add/candidate', methods=['POST'])
 def add_candidate():
-    print(request.form)
+    if "google_id" not in session:
+        return redirect('/')
+    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+        return abort(403)
     data = request.form
-    candidate_data = {"position": data["position"], "name": data["name"]}
+    uid = unique_id(6)
+    candidate_data = {
+        "position": data["position"], "name": data["name"], "uid": uid}
     db.candidates.insert_one(candidate_data)
-    return redirect('/admin')
+    return redirect('/candidates')
 
 
 @app.route('/add/position', methods=['POST'])
 def add_position():
-    print(request.form)
+    if "google_id" not in session:
+        return redirect('/')
+    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+        return abort(403)
     data = request.form
     position_data = {"name": data["name"]}
     db.positions.insert_one(position_data)
@@ -180,29 +210,92 @@ def add_position():
 
 @app.route('/add/voter', methods=['POST'])
 def add_voter():
-    print(request.form)
+    if "google_id" not in session:
+        return redirect('/')
+    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+        return abort(403)
     data = request.form
     voter_data = {"name": data["name"], "email": data["email"],
                   "branch": data["branch"], "voted": "false"}
     db.voters.insert_one(voter_data)
-    return redirect('/admin')
+    return redirect('/voters')
 
-@app.route('/positions', methods=['GET'])
+
+@app.route('/positions')
 def get_positions():
+    if "google_id" not in session:
+        return redirect('/')
+    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+        return abort(403)
     positions = db.positions.find()
     pos_list = []
     for pos in positions:
         pos_list.append(pos)
     return render_template('positions.html', positions=pos_list)
 
-@app.route('/candidates', methods=['GET'])
+
+@app.route('/candidates')
 def get_candidates():
+    if "google_id" not in session:
+        return redirect('/')
+    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+        return abort(403)
     positions = db.positions.find()
+    candidates = db.candidates.find()
     pos_list = []
     for pos in positions:
         pos_list.append(pos)
-    print(pos_list)
-    return render_template('candidates.html', positions=pos_list)
+    candidates_list = []
+    for candidate in candidates:
+        candidate['position'] = db.positions.find_one(
+            {"_id": ObjectId(candidate['position'])})['name']
+        candidates_list.append(candidate)
+    return render_template('candidates.html', positions=pos_list, candidates=candidates_list)
+
+
+@app.route('/voters')
+def get_voters():
+    if "google_id" not in session:
+        return redirect('/')
+    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+        return abort(403)
+    voters = db.voters.find()
+    voters_list = []
+    for voter in voters:
+        voters_list.append(voter)
+    return render_template('voters.html', voters=voters_list)
+
+
+@app.route('/delete/position/<id>')
+def delete_position(id):
+    if "google_id" not in session:
+        return redirect('/')
+    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+        return abort(403)
+    db.candidates.delete_many({"position": id})
+    db.positions.delete_one({"_id": ObjectId(id)})
+    return redirect('/positions')
+
+
+@app.route('/delete/candidate/<id>')
+def delete_candidate(id):
+    if "google_id" not in session:
+        return redirect('/')
+    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+        return abort(403)
+    db.candidates.delete_one({"_id": ObjectId(id)})
+    return redirect('/candidates')
+
+
+@app.route('/delete/voter/<id>')
+def delete_voter(id):
+    if "google_id" not in session:
+        return redirect('/')
+    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+        return abort(403)
+    db.voters.delete_one({"_id": ObjectId(id)})
+    return redirect('/voters')
+
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
