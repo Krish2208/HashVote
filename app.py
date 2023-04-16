@@ -13,7 +13,7 @@ def home():
 
 @app.route('/login', methods=['POST'])
 def chk_double():
-    prev= Blockchain_voter.last_block.transactions
+    prev= Blockchain_voter.last_block().transactions
     trans_data= request.get_json()
     if trans_data["mail"] in prev:
         return "Chtya samjha hai kya?", 404
