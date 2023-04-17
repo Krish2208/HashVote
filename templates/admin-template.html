@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hash Vote Admin</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
+      crossorigin="anonymous"
+    />
+    <link href="/static/css/admin.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="app-header">
+      <nav class="navbar navbar-expand navbar-dark bg-dark px-2">
+        <a href="#" class="navbar-brand px-4">Hash Vote</a>
+
+        <div class="navbar-collapse"></div>
+
+        <div class="profile-logo dropstart">
+          <button
+            class="btn btn-outline-light dropdown-toggle"
+            data-bs-toggle="dropdown"
+          >
+            Admin
+          </button>
+          <ul class="dropdown-menu dropdown-menu-dark">
+            <li><a href="#" class="dropdown-item">Profile</a></li>
+            <li><a href="/logout" class="dropdown-item">Logout</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+    <main>
+      <div class="side-nav">
+        <div class="side-nav-content">
+          <ul class="nav-list">
+            <li class="nav-list-item">
+              <i class="fa-solid fa-home"></i>
+              <span>
+                <a href="#">Dashboard</a>
+              </span>
+            </li>
+            <li class="nav-list-item">
+              <i class="fa-solid fa-people-group"></i>
+              <span>
+                <a href="/voters">Voters</a>
+              </span>
+            </li>
+            <li class="nav-list-item">
+              <i class="fa-solid fa-person"></i>
+              <span>
+                <a href="/candidates">Candidates</a>
+              </span>
+            </li>
+            <li class="nav-list-item">
+              <i class="fa-solid fa-address-card"></i>
+              <span>
+                <a href="/positions">Positions</a>
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="display-area p-3">{% block content %} {% endblock %}</div>
+    </main>
+    <!--Scripts-->
+    <script
+      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"
+      integrity="sha384-zYPOMqeu1DAVkHiLqWBUTcbYfZ8osu1Nd6Z89ify25QV9guujx43ITvfi12/QExE"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js"
+      integrity="sha384-Y4oOpwW3duJdCWv5ly8SCFYWqFDsfob/3GkgExXKV4idmbt98QcxXYs9UoXAB7BZ"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://kit.fontawesome.com/65944eb833.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="/static/js/admin.js"></script>
+    <!--End Script-->
+  </body>
+</html>

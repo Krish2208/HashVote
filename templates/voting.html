@@ -1,0 +1,24 @@
+{% extends 'base-template.html' %} {% block content %}
+<div class="row m-2">
+  <div class="text-center">
+    <h4 class="display-6">Vote for your favourite candidate</h4>
+  </div>
+  <form action="/voting" method="post">
+    {% for item in data %}
+    <div class="form-group row">
+      <label for="{{item.id}}" class="form-label col-sm-2 my-auto"
+        >{{item.name}}</label
+      >
+      <div class="col-sm-10 p-1 my-auto">
+        <select class="form-select" id="{{item.id}}" name="{{item.id}}">
+          {% for candidate in item.candidates %}
+          <option value="{{candidate.id}}">{{candidate.name}}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary mt-3">Submit</button>
+  </form>
+</div>
+{% endblock %}

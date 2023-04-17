@@ -1,0 +1,101 @@
+body {
+  background-color: #f1f1f1;
+  font-family: "Open Sans", sans-serif;
+}
+
+.app-header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 4rem;
+  z-index: 2;
+}
+
+main {
+  position: absolute;
+  top: 4rem;
+  width: 100%;
+  z-index: 1;
+}
+
+nav {
+  height: 100%;
+}
+
+.side-nav {
+  position: absolute;
+  left: 0;
+  width: 250px;
+  height: calc(100vh - 4rem);
+  background-color: #212529;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  border-top: 1px solid #4a4a4a;
+}
+
+.side-nav-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.side-nav-button:hover {
+  background-color: #4a4a4a82;
+  border-radius: 20%;
+}
+
+.side-nav-content {
+  z-index: 2;
+  color: #fff;
+  width: 230px;
+  margin: 10px 10px 0px 10px;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+}
+
+.nav-list-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1rem;
+  cursor: pointer;
+}
+
+.nav-list-item i {
+  font-size: 1.4rem;
+  width: 30px;
+  height: 30px;
+  margin: 0 25px 0 10px;
+  text-align: center;
+  line-height: 30px;
+}
+
+.nav-list-item a {
+  height: 25px;
+  font-size: 1.2rem;
+  line-height: 25px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.nav-list-item:hover {
+  background-color: #4a4a4a82;
+  border-radius: 5px;
+}
+
+.display-area {
+  position: absolute;
+  left: 250px;
+  width: calc(100% - 250px);
+  height: calc(100vh - 4rem);
+}
+
+.position-table {
+  border: 1px solid #afafaf;
+  box-shadow: 0 0 5px 1px #bebebe;
+}

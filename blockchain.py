@@ -9,6 +9,7 @@ from hashlib import sha256
 import json
 import time
 class Block:
+
     def __init__(self,id, transactions, timestamp, previous_hash):
         self.id= id
         self.transactions= transactions
@@ -116,5 +117,5 @@ chain.add_new_transaction(new_data)
 result= chain.mine()
 print(chain.last_block().transactions)
 print(result)
-last_block= chain.last_block().hash
-print(last_block)
+chain.chain[1].transactions= {121342}
+print(chain.chain)
