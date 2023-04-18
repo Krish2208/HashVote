@@ -111,6 +111,16 @@ class Blockchain:
         self.unconfirmed_transactions= []
         return True
     
+    def chk_result(self, chain, result):
+        for block in chain[1:]:
+            x= block.transactions
+            votes= x["votes"]
+            for i in range(0, len(votes)):
+                result[votes[i]]= result[votes[i]]+1
+        return result
+
+
+    
 chain= Blockchain()
 chain.create_genesis_block_set()
 # chain.add_new_transaction(2123)
