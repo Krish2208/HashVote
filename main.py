@@ -39,7 +39,7 @@ db = client.test
 admin_ids = ['ee210002041@iiti.ac.in']
 
 start_time = datetime(2021, 4, 1, 0, 0, 0, 0)
-end_time = datetime(2021, 4, 2, 0, 0, 0, 0)
+end_time = datetime(2023, 5, 2, 0, 0, 0, 0)
 
 
 def unique_id(size):
@@ -50,10 +50,14 @@ def unique_id(size):
 
 def login_is_required(function):
     def wrapper(*args, **kwargs):
+        cur_time = datetime.now()
         if "google_id" not in session:
             return redirect("/")
+        elif cur_time < start_time or cur_time > end_time:
+            return redirect("/notime")
         else:
             return function()
+    wrapper.__name__ = function.__name__
     return wrapper
 
 
@@ -65,6 +69,7 @@ def admin_is_required(function):
             return redirect("/")
         else:
             return function()
+    admin_wrap.__name__ = function.__name__
     return admin_wrap
 
 
@@ -76,17 +81,63 @@ def index():
 
 
 @app.route('/role')
+@login_is_required
 def role():
-    if "google_id" not in session:
-        return redirect("/")
+    prev = set(Blockchain_voter.last_block.transactions)
+    if session["email"] in admin_ids:
+        return redirect("/dashboard")
+    elif session.get("email") in prev:
+        return redirect("/already")
     else:
-        prev = set(Blockchain_voter.last_block.transactions)
-        if session["email"] in admin_ids:
-            return redirect("/admin")
-        elif session.get("email") in prev:
-            return redirect("/already")
-        else:
-            return redirect("/vote")
+        return redirect("/vote")
+
+
+@app.route('/login/google')
+def login_google():
+    authorization_url, state = flow.authorization_url()
+    session['state'] = state
+    x = session['state']
+    session.modified = True
+    return redirect(authorization_url)
+
+
+@app.route("/logout")
+@login_is_required
+def logout():
+    session.clear()
+    return redirect("/")
+
+
+@app.route('/callback')
+def callback():
+    flow.fetch_token(authorization_response=request.url)
+    if session['state'] != request.args["state"]:
+        abort(500)  # State does not match!
+
+    credentials = flow.credentials
+    request_session = requests.session()
+    cached_session = cachecontrol.CacheControl(request_session)
+    token_request = google.auth.transport.requests.Request(
+        session=cached_session)
+
+    id_info = id_token.verify_oauth2_token(
+        id_token=credentials._id_token,
+        request=token_request,
+        audience=GOOGLE_CLIENT_ID
+    )
+
+    session["google_id"] = id_info.get("sub")
+    session["name"] = id_info.get("name")
+    session["email"] = id_info.get("email")
+    return redirect("/role")
+
+
+@app.route('/notime')
+def notime():
+    cur_time = datetime.now()
+    if cur_time > start_time and cur_time < end_time:
+        return redirect("/")
+    return render_template('notime.html')
 
 
 @app.route('/vote')
@@ -116,61 +167,19 @@ def vote_candidate():
 
 
 @app.route('/already')
+@login_is_required
 def already():
     return render_template('already.html')
 
 
-@app.route('/login/google')
-def login_google():
-    authorization_url, state = flow.authorization_url()
-    session['state'] = state
-    session.modified = True
-    return redirect(authorization_url)
-
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/")
-
-
-@app.route('/callback')
-def callback():
-    flow.fetch_token(authorization_response=request.url)
-    if session['state'] != request.args["state"]:
-        abort(500)  # State does not match!
-
-    credentials = flow.credentials
-    request_session = requests.session()
-    cached_session = cachecontrol.CacheControl(request_session)
-    token_request = google.auth.transport.requests.Request(
-        session=cached_session)
-
-    id_info = id_token.verify_oauth2_token(
-        id_token=credentials._id_token,
-        request=token_request,
-        audience=GOOGLE_CLIENT_ID
-    )
-
-    session["google_id"] = id_info.get("sub")
-    session["name"] = id_info.get("name")
-    session["email"] = id_info.get("email")
-    session["picture"] = id_info.get("picture")
-    return redirect("/role")
-
-
-@app.route('/admin')
-@admin_is_required
-def admin():
-    return render_template('admin-template.html')
-
-
 @app.route('/thanks')
+@login_is_required
 def thanks():
     return render_template('thanks.html')
 
 
 @app.route('/voting', methods=['POST'])
+@login_is_required
 def voting():
     prev = set(Blockchain_voter.last_block.transactions)
     data = request.form
@@ -189,63 +198,23 @@ def voting():
     return redirect('/thanks')
 
 
-@app.route('/getchain', methods=['GET'])
-def getchain():
-    print(Blockchain_votes.chain[0].transactions)
-    print(Blockchain_voter.chain[0].transactions)
-    print(Blockchain_votes.chain[1].transactions)
-    print(Blockchain_voter.chain[1].transactions)
-    return redirect('/')
+@app.route('/dashboard')
+@admin_is_required
+def dashboard():
+    return render_template('dashboard.html', start=start_time, end=end_time)
 
 
-@app.route('/add/candidate', methods=['POST'])
-def add_candidate():
-    if "google_id" not in session:
-        return redirect('/')
-    elif session["email"] not in admin_ids:
-        return abort(403)
-    data = request.form
-    uid = unique_id(6)
-    candidate_data = {
-        "position": data["position"], "name": data["name"], "uid": uid}
-    db.candidates.insert_one(candidate_data)
-    return redirect('/candidates')
-
-
-@app.route('/add/position', methods=['POST'])
-def add_position():
-    if "google_id" not in session:
-        return redirect('/')
-    elif session["email"] not in admin_ids:
-        return abort(403)
-    data = request.form
-    perms = data.getlist("permission")
-    if "all" in perms:
-        perms = ["all"]
-    position_data = {"name": data["name"], "permission": perms}
-    db.positions.insert_one(position_data)
-    return redirect('/positions')
-
-
-@app.route('/add/voter', methods=['POST'])
-def add_voter():
-    if "google_id" not in session:
-        return redirect('/')
-    elif session["email"] not in admin_ids:
-        return abort(403)
-    data = request.form
-    voter_data = {"name": data["name"], "email": data["email"],
-                  "branch": data["branch"], "voted": "false"}
-    db.voters.insert_one(voter_data)
-    return redirect('/voters')
-
-
-@app.route('/positions')
+@app.route('/positions', methods=['GET', 'POST'])
+@admin_is_required
 def get_positions():
-    if "google_id" not in session:
-        return redirect('/')
-    elif session["email"] not in admin_ids:
-        return abort(403)
+    if request.method == 'POST':
+        data = request.form
+        perms = data.getlist("permission")
+        if "all" in perms:
+            perms = ["all"]
+        position_data = {"name": data["name"], "permission": perms}
+        db.positions.insert_one(position_data)
+        return redirect('/positions')
     positions = db.positions.find()
     pos_list = []
     for pos in positions:
@@ -254,12 +223,16 @@ def get_positions():
     return render_template('positions.html', positions=pos_list, branch=branch_list)
 
 
-@app.route('/candidates')
+@app.route('/candidates', methods=['GET', 'POST'])
+@admin_is_required
 def get_candidates():
-    if "google_id" not in session:
-        return redirect('/')
-    elif session["email"] not in admin_ids:
-        return abort(403)
+    if request.method == 'POST':
+        data = request.form
+        uid = unique_id(6)
+        candidate_data = {
+            "position": data["position"], "name": data["name"], "uid": uid}
+        db.candidates.insert_one(candidate_data)
+        return redirect('/candidates')
     positions = db.positions.find()
     candidates = db.candidates.find()
     pos_list = []
@@ -273,12 +246,15 @@ def get_candidates():
     return render_template('candidates.html', positions=pos_list, candidates=candidates_list)
 
 
-@app.route('/voters')
+@app.route('/voters', methods=['GET', 'POST'])
+@admin_is_required
 def get_voters():
-    if "google_id" not in session:
-        return redirect('/')
-    elif session["email"] not in admin_ids:
-        return abort(403)
+    if request.method == 'POST':
+        data = request.form
+        voter_data = {"name": data["name"], "email": data["email"],
+                      "branch": data["branch"], "voted": "false"}
+        db.voters.insert_one(voter_data)
+        return redirect('/voters')
     voters_list = list(db.voters.find())
     branch_list = list(db.branch.find())
     return render_template('voters.html', voters=voters_list, branch=branch_list)
@@ -357,13 +333,8 @@ def visualise():
         for candi in candidates:
             list_of_win[candi["name"]] = 5
         plot_data[pos["name"]] = list_of_win
-    # fig, axs = plt.subplots(2,2)
-    # i= 0
-    # j= 0
-    # count= 1
 
     for pos, pos_data in plot_data.items():
-        # print(pos_data)
         explode = []
         count = 0
         for i in range(0, len(pos_data.keys())):
@@ -372,16 +343,12 @@ def visualise():
         plt.pie(list(pos_data.values()), autopct=lambda pct: func(pct, list(
             pos_data.values())), labels=list(pos_data.keys()), explode=explode, shadow=True)
         plt.title(pos)
-        # if(count%2==0):
-        #     i=i+1
-        # else:
-        #     j=j+1
-        # count= count+1
         plt.savefig('./fig.png')
         plt.show()
 
 
 @app.route('/publishresult', methods=['POST'])
+@admin_is_required
 def publishresult():
     if "google_id" not in session:
         return redirect('/')
@@ -414,18 +381,19 @@ def result():
             candidate_dict["name"] = candidate["name"]
             candidate_dict["votes"] = candidate["votes"]
             candidate_dict["position"] = position["name"]
-            if(i==0):
+            if (i == 0):
                 candidate_dict["winner"] = True
             data_list.append(candidate_dict)
     return render_template('result.html', candidates=data_list)
 
 
 @app.route('/timeset', methods=['POST'])
+@admin_is_required
 def timeset():
     if "google_id" not in session:
         return redirect('/')
-    # elif session["email"] not in admin_ids:
-    #     return abort(403)
+    elif session["email"] not in admin_ids:
+        return abort(403)
     data = request.form
     print(data)
     global start_time
@@ -433,13 +401,6 @@ def timeset():
     start_time = datetime.strptime(data['start'], '%Y-%m-%dT%H:%M')
     end_time = datetime.strptime(data['end'], '%Y-%m-%dT%H:%M')
     return redirect('/dashboard')
-
-
-@app.route('/dashboard')
-def dashboard():
-    if "google_id" not in session:
-        return redirect('/')
-    return render_template('dashboard.html', start=start_time, end=end_time)
 
 
 if __name__ == '__main__':
