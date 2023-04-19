@@ -10,6 +10,7 @@ import pymongo
 from bson import ObjectId
 import string
 import random
+import blockchain
 
 app = Flask(__name__)
 app.secret_key = "hashvote"
@@ -23,6 +24,10 @@ flow = flow.Flow.from_client_secrets_file(
             'https://www.googleapis.com/auth/userinfo.profile', 'openid'],
     redirect_uri='http://localhost:5000/callback'
 )
+Blockchain_votes= blockchain.Blockchain()
+Blockchain_voter= blockchain.Blockchain()
+Blockchain_votes.create_genesis_block()
+Blockchain_voter.create_genesis_block_set()
 
 data = [
     {
@@ -75,6 +80,7 @@ client = pymongo.MongoClient(
     "mongodb+srv://diwankrish17:N4lTSO9A3DJ6sRYW@cluster0.wlsbebc.mongodb.net/?retryWrites=true&w=majority")
 db = client.test
 
+admin_ids = ['ee210002041@iiti.ac.in']
 
 def unique_id(size):
     chars = list(set(string.ascii_uppercase +
@@ -95,7 +101,7 @@ def admin_is_required(function):
     def admin_wrap(*args, **kwargs):
         if "google_id" not in session:
             return redirect("/")
-        elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+        elif session["email"] not in admin_ids:
             return redirect("/")
         else:
             return function()
@@ -114,17 +120,41 @@ def role():
     if "google_id" not in session:
         return redirect("/")
     else:
-        if session["email"] in ["cse210001034@iiti.ac.in"]:
+        prev= set(Blockchain_voter.last_block.transactions)
+        if session["email"] in admin_ids:
             return redirect("/admin")
+        elif session.get("email") in prev:
+            return redirect("/already")
         else:
             return redirect("/vote")
 
 
 @app.route('/vote')
 @login_is_required
-def login():
-    return render_template('voting.html', data=data)
+def vote_candidate():
+    prev= set(Blockchain_voter.last_block.transactions)
+    if session.get("email") in prev:
+        return redirect("/already")
+    positions = list(db.positions.find({}))
+    data_list = []
+    for position in positions:
+        pos_dict = {}
+        pos_dict["id"] = position["_id"]
+        pos_dict["name"] = position["name"]
+        pos_dict["candidates"] = []
+        candidates = list(db.candidates.find({"position": str(position["_id"])}))
+        for candidate in candidates:
+            candidate_dict = {}
+            candidate_dict["id"] = candidate["uid"]
+            candidate_dict["name"] = candidate["name"]
+            pos_dict["candidates"].append(candidate_dict)
+        data_list.append(pos_dict)
+    print(data_list)
+    return render_template('voting.html', data=data_list)
 
+@app.route('/already')
+def already():
+    return render_template('already.html')
 
 @app.route('/login/google')
 def login_google():
@@ -143,7 +173,7 @@ def logout():
 @app.route('/callback')
 def callback():
     flow.fetch_token(authorization_response=request.url)
-    if session["state"] != request.args["state"]:
+    if session['state'] != request.args["state"]:
         abort(500)  # State does not match!
 
     credentials = flow.credentials
@@ -178,15 +208,34 @@ def thanks():
 
 @app.route('/voting', methods=['POST'])
 def voting():
-    print(request.form)
+    prev= set(Blockchain_voter.last_block.transactions)
+    data = request.form
+    if session.get("email") in prev:
+        return redirect('/already')
+    else:
+        prev.add(session.get("email"))
+        Blockchain_voter.add_new_transaction(prev)
+        Blockchain_voter.mine()
+        votes = ""
+        for key, value in data.items():
+            votes += value + ","
+        Blockchain_votes.add_new_transaction({"mail": session.get("email"), "votes": votes})
+        Blockchain_votes.mine()
     return redirect('/thanks')
 
+@app.route('/getchain', methods=['GET'])
+def getchain():
+    print(Blockchain_votes.chain[0].transactions)
+    print(Blockchain_voter.chain[0].transactions)
+    print(Blockchain_votes.chain[1].transactions)
+    print(Blockchain_voter.chain[1].transactions)
+    return redirect('/')
 
 @app.route('/add/candidate', methods=['POST'])
 def add_candidate():
     if "google_id" not in session:
         return redirect('/')
-    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+    elif session["email"] not in admin_ids:
         return abort(403)
     data = request.form
     uid = unique_id(6)
@@ -200,7 +249,7 @@ def add_candidate():
 def add_position():
     if "google_id" not in session:
         return redirect('/')
-    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+    elif session["email"] not in admin_ids:
         return abort(403)
     data = request.form
     position_data = {"name": data["name"]}
@@ -212,7 +261,7 @@ def add_position():
 def add_voter():
     if "google_id" not in session:
         return redirect('/')
-    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+    elif session["email"] not in admin_ids:
         return abort(403)
     data = request.form
     voter_data = {"name": data["name"], "email": data["email"],
@@ -225,7 +274,7 @@ def add_voter():
 def get_positions():
     if "google_id" not in session:
         return redirect('/')
-    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+    elif session["email"] not in admin_ids:
         return abort(403)
     positions = db.positions.find()
     pos_list = []
@@ -238,7 +287,7 @@ def get_positions():
 def get_candidates():
     if "google_id" not in session:
         return redirect('/')
-    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+    elif session["email"] not in admin_ids:
         return abort(403)
     positions = db.positions.find()
     candidates = db.candidates.find()
@@ -257,7 +306,7 @@ def get_candidates():
 def get_voters():
     if "google_id" not in session:
         return redirect('/')
-    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+    elif session["email"] not in admin_ids:
         return abort(403)
     voters = db.voters.find()
     voters_list = []
@@ -270,7 +319,7 @@ def get_voters():
 def delete_position(id):
     if "google_id" not in session:
         return redirect('/')
-    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+    elif session["email"] not in admin_ids:
         return abort(403)
     db.candidates.delete_many({"position": id})
     db.positions.delete_one({"_id": ObjectId(id)})
@@ -281,7 +330,7 @@ def delete_position(id):
 def delete_candidate(id):
     if "google_id" not in session:
         return redirect('/')
-    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+    elif session["email"] not in admin_ids:
         return abort(403)
     db.candidates.delete_one({"_id": ObjectId(id)})
     return redirect('/candidates')
@@ -291,7 +340,7 @@ def delete_candidate(id):
 def delete_voter(id):
     if "google_id" not in session:
         return redirect('/')
-    elif session["email"] not in ["cse210001034@iiti.ac.in"]:
+    elif session["email"] not in admin_ids:
         return abort(403)
     db.voters.delete_one({"_id": ObjectId(id)})
     return redirect('/voters')
