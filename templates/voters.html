@@ -30,36 +30,13 @@
     <label for="name" class="col-sm-2 col-form-label">Branch</label>
     <div class="col-sm-10 pt-1">
       <select required class="form-control" name="branch">
-        <optgroup label="CSE">
-          <option value="CSEUG1">CSE BTECH 1st/2nd Year</option>
-          <option value="CSEUG2">CSE BTECH 3rd/4th Year</option>
-          <option value="CSEPG">CSE BTECH 3rd Year</option>
-          <option value="CSEPHD">CSE PHD</option>
+        {% for one_branch in branch %}
+        <optgroup label="{{ one_branch.name }}">
+          {% for cat in one_branch.categories %}
+          <option value="{{ cat }}">{{ cat }}</option>
+          {% endfor %}
         </optgroup>
-        <optgroup label="EE">
-          <option value="EEUG1">EE BTECH 1st/2nd Year</option>
-          <option value="EEUG2">EE BTECH 3rd/4th Year</option>
-          <option value="EEPG">EE BTECH 3rd Year</option>
-          <option value="EEPHD">EE PHD</option>
-        </optgroup>
-        <optgroup label="ME">
-          <option value="MEUG1">ME BTECH 1st/2nd Year</option>
-          <option value="MEUG2">ME BTECH 3rd/4th Year</option>
-          <option value="MEPG">ME BTECH 3rd Year</option>
-          <option value="MEPHD">ME PHD</option>
-        </optgroup>
-        <optgroup label="CE">
-          <option value="CEUG1">CE BTECH 1st/2nd Year</option>
-          <option value="CEUG2">CE BTECH 3rd/4th Year</option>
-          <option value="CEPG">CE BTECH 3rd Year</option>
-          <option value="CEPHD">CE PHD</option>
-        </optgroup>
-        <optgroup label="MEMS">
-          <option value="MEMSUG1">MEMS BTECH 1st/2nd Year</option>
-          <option value="MEMSUG2">MEMS BTECH 3rd/4th Year</option>
-          <option value="MEMSPG">MEMS BTECH 3rd Year</option>
-          <option value="MEMSPHD">MEMS PHD</option>
-        </optgroup>
+        {% endfor %}
       </select>
     </div>
   </div>

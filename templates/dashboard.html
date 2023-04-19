@@ -1,0 +1,33 @@
+{% extends 'admin-template.html' %} {% block content %}
+<div class="h4">Time of start of Voting and End of Voting</div>
+<form action="/timeset" method="post">
+  <div class="form-group row pt-1">
+    <label class="col-sm-2 col-form-label" for="start"
+      >Start Date and time:</label
+    >
+    <div class="col-sm-10">
+      <input
+        class="form-control"
+        type="datetime-local"
+        name="start"
+        id="start"
+        value="{{ start }}"
+      />
+    </div>
+  </div>
+  <div class="form-group row pt-1">
+    <label class="col-sm-2 col-form-label" for="end">End Date and time:</label>
+    <div class="col-sm-10">
+      <input
+        class="form-control"
+        type="datetime-local"
+        name="end"
+        id="end"
+        value="{{ end }}"
+      />
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">Set Time</button>
+</form>
+<hr/>
+{% endblock %}

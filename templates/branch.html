@@ -1,0 +1,72 @@
+{% extends 'admin-template.html' %} {% block content %}
+<form action="/branch" , method="post">
+  <div class="form-group row pt-1">
+    <label for="name" class="col-sm-2 col-form-label">Name of the Branch</label>
+    <div class="col-sm-10">
+      <input
+        required
+        type="text"
+        class="form-control"
+        id="name"
+        placeholder="Name of the Branch"
+        name="name"
+      />
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">Add Branch</button>
+</form>
+<hr />
+<form action="/category" , method="post">
+  <div class="form-group row pt-1">
+    <label for="category" class="col-sm-2 col-form-label"
+      >Name of the Category</label
+    >
+    <div class="col-sm-10">
+      <input
+        required
+        type="text"
+        class="form-control"
+        id="category"
+        placeholder="Name of the Category"
+        name="category"
+      />
+    </div>
+  </div>
+  <div class="form-group row pt-1">
+    <label for="branch" class="col-sm-2 col-form-label">Branch</label>
+    <div class="col-sm-10">
+      <select class="form-control" id="branch" name="branch">
+        {% for branch in branches %}
+        <option value="{{branch._id}}">{{branch.name}}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">Add Category</button>
+</form>
+<div class="row mt-4">
+  <div class="col-sm-12">
+    <h3>Branch and Categories</h3>
+  </div>
+  <div class="col-md-12 pt-2">
+    <table class="table table-striped position-table">
+      <thead>
+        <tr>
+          <th scope="col">Branch</th>
+          <th scope="col">Category</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for branch in branches %}
+        <tr>
+          <td>{{branch.name}}</td>
+          <td>
+            {% for category in branch.categories %} {{category}},&nbsp; {% endfor %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endblock %}
+</div>
