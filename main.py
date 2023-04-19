@@ -95,7 +95,9 @@ def vote_candidate():
     prev = set(Blockchain_voter.last_block.transactions)
     if session.get("email") in prev:
         return redirect("/already")
-    positions = list(db.positions.find({}))
+    permission = db.voters.find_one({"email": session["email"]})['branch']
+    positions = list(db.positions.find(
+        {"$or": [{"permission": "all"}, {"permission": permission}]}))
     data_list = []
     for position in positions:
         pos_dict = {}
@@ -110,7 +112,6 @@ def vote_candidate():
             candidate_dict["name"] = candidate["name"]
             pos_dict["candidates"].append(candidate_dict)
         data_list.append(pos_dict)
-    print(data_list)
     return render_template('voting.html', data=data_list)
 
 
@@ -233,7 +234,6 @@ def add_voter():
     elif session["email"] not in admin_ids:
         return abort(403)
     data = request.form
-    
     voter_data = {"name": data["name"], "email": data["email"],
                   "branch": data["branch"], "voted": "false"}
     db.voters.insert_one(voter_data)
@@ -283,6 +283,7 @@ def get_voters():
     branch_list = list(db.branch.find())
     return render_template('voters.html', voters=voters_list, branch=branch_list)
 
+
 @app.route('/branch', methods=['GET', 'POST'])
 def branch():
     if "google_id" not in session:
@@ -295,6 +296,7 @@ def branch():
     print(list(db.branch.find()))
     return render_template('branch.html', branches=list(db.branch.find()))
 
+
 @app.route('/category', methods=['POST'])
 def category():
     if "google_id" not in session:
@@ -303,8 +305,10 @@ def category():
         return abort(403)
     data = request.form
     print(data)
-    db.branch.update_one({"_id": ObjectId(data["branch"])}, {"$push": {"categories": data["category"]}})
+    db.branch.update_one({"_id": ObjectId(data["branch"])}, {
+                         "$push": {"categories": data["category"]}})
     return redirect('/branch')
+
 
 @app.route('/delete/position/<id>')
 def delete_position(id):
@@ -336,9 +340,11 @@ def delete_voter(id):
     db.voters.delete_one({"_id": ObjectId(id)})
     return redirect('/voters')
 
+
 def func(pct, allvalues):
     absolute = int(pct / 100.*np.sum(allvalues))
     return "{:.1f}%\n({:d})".format(pct, absolute)
+
 
 @app.route('/visualise')
 def visualise():
@@ -355,15 +361,16 @@ def visualise():
     # i= 0
     # j= 0
     # count= 1
-    
+
     for pos, pos_data in plot_data.items():
         # print(pos_data)
         explode = []
-        count= 0
+        count = 0
         for i in range(0, len(pos_data.keys())):
             explode.append(count)
-            count= count+ 0.05
-        plt.pie(list(pos_data.values()), autopct = lambda pct: func(pct,list(pos_data.values())), labels=list(pos_data.keys()), explode= explode, shadow= True)
+            count = count + 0.05
+        plt.pie(list(pos_data.values()), autopct=lambda pct: func(pct, list(
+            pos_data.values())), labels=list(pos_data.keys()), explode=explode, shadow=True)
         plt.title(pos)
         # if(count%2==0):
         #     i=i+1
@@ -371,11 +378,11 @@ def visualise():
         #     j=j+1
         # count= count+1
         plt.savefig('./fig.png')
-        plt.show() 
+        plt.show()
 
 
-@app.route('/result', methods=['POST'])
-def result():
+@app.route('/publishresult', methods=['POST'])
+def publishresult():
     if "google_id" not in session:
         return redirect('/')
     elif session["email"] not in admin_ids:
@@ -390,7 +397,27 @@ def result():
         requests.append(pymongo.UpdateOne(
             {"uid": candidate_uid}, {"$set": {"votes": votes}}))
     db.candidates.bulk_write(requests)
-    return candidates_map, 200
+    return redirect('/')
+
+
+@app.route('/result')
+def result():
+    if "google_id" not in session:
+        return redirect('/')
+    positions = list(db.positions.find())
+    data_list = []
+    for position in positions:
+        candidates = list(db.candidates.find(
+            {"position": str(position["_id"])}).sort("votes", -1))
+        for i, candidate in enumerate(candidates):
+            candidate_dict = {}
+            candidate_dict["name"] = candidate["name"]
+            candidate_dict["votes"] = candidate["votes"]
+            candidate_dict["position"] = position["name"]
+            if(i==0):
+                candidate_dict["winner"] = True
+            data_list.append(candidate_dict)
+    return render_template('result.html', candidates=data_list)
 
 
 @app.route('/timeset', methods=['POST'])

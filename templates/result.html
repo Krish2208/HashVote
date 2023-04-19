@@ -1,0 +1,23 @@
+{% extends 'base-template.html' %} {% block content %}
+<div class="row m-2 text-center">
+  <div class="h4">Result</div>
+  <table class="table-stripped">
+    <th>Position</th>
+    <th>Name</th>
+    <th>Votes</th>
+    {% for candidate in candidates %}
+    <tr>
+      {% if candidate.winner %}
+      <td style="color: Green">{{ candidate.position }}</td>
+      <td style="color: Green">{{ candidate.name }}</td>
+      <td style="color: Green">{{ candidate.votes }}</td>
+      {% else %}
+      <td>{{ candidate.position }}</td>
+      <td>{{ candidate.name }}</td>
+      <td>{{ candidate.votes }}</td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
