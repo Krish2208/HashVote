@@ -286,7 +286,7 @@ def category():
     return redirect('/branch')
 
 
-@app.route('/delete/position/<id>')
+@app.route('/delete/position/<id>', methods=['post'])
 def delete_position(id):
     if "google_id" not in session:
         return redirect('/')
@@ -297,7 +297,7 @@ def delete_position(id):
     return redirect('/positions')
 
 
-@app.route('/delete/candidate/<id>')
+@app.route('/delete/candidate/<id>', methods=['post'])
 def delete_candidate(id):
     if "google_id" not in session:
         return redirect('/')
@@ -307,7 +307,7 @@ def delete_candidate(id):
     return redirect('/candidates')
 
 
-@app.route('/delete/voter/<id>')
+@app.route('/delete/voter/<id>', methods=['post'])
 def delete_voter(id):
     if "google_id" not in session:
         return redirect('/')

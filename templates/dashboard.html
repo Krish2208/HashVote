@@ -3,7 +3,7 @@
   <div class="text-center fw-bolder h2">Election Dashboard</div>
   <hr class="mb-4" />
   <div class="h4 fw-bold">Voting Time</div>
-  <form action="/timeset" method="post">
+  <form action="/timeset" method="post" onSubmit="return confirm('Are you sure you wish to set the time?');">
     <div class="form-group row pt-1">
       <label class="col-sm-2 col-form-label" for="start"
         >Start Date and time</label
@@ -35,7 +35,7 @@
     </div>
   </form>
   <hr class="my-3" />
-  <form method="post" action="/publishresult">
+  <form method="post" action="/publishresult" onSubmit="return confirm('Are you sure you wish to publish the result?');">
     <div class="row py-1">
       <div class="col-sm-6 my-auto h4 fw-bold" for="publish">
         Publish Election Results

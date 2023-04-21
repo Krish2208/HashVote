@@ -57,7 +57,7 @@
           <th scope="col">Name</th>
           <th scope="col">Email</th>
           <th scope="col">Branch</th>
-          <th scope="col">Action</th>
+          <th scope="col" colspan="2">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -67,12 +67,22 @@
           <td>{{ voter.email }}</td>
           <td>{{ voter.branch }}</td>
           <td>
-            <a href="/edit/voter/{{ voter._id }}" class="btn btn-primary"
-              >Edit</a
+            <form
+              action="/edit/voter/{{ voter._id }}"
+              method="post"
+              onSubmit="return confirm('Are you sure you wish to edit?');"
             >
-            <a href="/delete/voter/{{ voter._id }}" class="btn btn-danger"
-              >Delete</a
+              <button type="submit" class="btn btn-primary">Edit</button>
+            </form>
+          </td>
+          <td>
+            <form
+              action="/delete/voter/{{ voter._id }}"
+              method="post"
+              onSubmit="return confirm('Are you sure you wish to delete?');"
             >
+              <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
           </td>
         </tr>
         {% endfor %}

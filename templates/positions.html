@@ -63,9 +63,13 @@
             {% for perm in position.permission %} {{ perm }}, {% endfor %}
           </td>
           <td>
-            <a href="/delete/position/{{ position._id }}" class="btn btn-danger"
-              >Delete</a
+            <form
+              action="/delete/position/{{ position._id }}"
+              method="post"
+              onSubmit="return confirm('Are you sure you wish to delete?');"
             >
+              <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
           </td>
         </tr>
         {% endfor %}
