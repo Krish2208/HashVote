@@ -90,12 +90,11 @@ class Blockchain:
         return(block_hash.startswith('0'*Blockchain.difficulty) 
         and block_hash== block.find_hash())
 
-    @classmethod
     #Check the validity of the data in the chain to catch any malpractices
-    def check_chain(self, chain):
+    def check_chain(self):
         result= True
-        previous_hash= chain[0].hash
-        for block in chain[1:]:
+        previous_hash = self.chain[0].hash
+        for block in self.chain[1:]:
             block_hash= block.hash
             delattr(block, "hash")
             block_hash_now= block.find_hash()

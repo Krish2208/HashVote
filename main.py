@@ -1,4 +1,4 @@
-from flask import Flask, abort, redirect, render_template, request, session
+from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
 import os
 from google.oauth2 import id_token
 import pathlib
@@ -36,7 +36,8 @@ client = pymongo.MongoClient(
     "mongodb+srv://diwankrish17:N4lTSO9A3DJ6sRYW@cluster0.wlsbebc.mongodb.net/?retryWrites=true&w=majority")
 db = client.test
 
-admin_ids = ['ee210002041@iiti.ac.in', 'cse210001083@iiti.ac.in', 'cse210001034@iiti.ac.in']
+admin_ids = ['ee210002041@iiti.ac.in',
+             'cse210001083@iiti.ac.in', 'cse210001034@iiti.ac.in']
 
 start_time = datetime(2021, 4, 1, 0, 0, 0, 0)
 end_time = datetime(2023, 5, 2, 0, 0, 0, 0)
@@ -317,6 +318,18 @@ def delete_voter(id):
     return redirect('/voters')
 
 
+@app.route('/edit/voter/<id>', methods=['post'])
+def edit_voter(id):
+    if "google_id" not in session:
+        return redirect('/')
+    elif session["email"] not in admin_ids:
+        return abort(403)
+    data = request.form
+    db.voters.update_one({"_id": ObjectId(id)}, {"$set": {
+                         "name": data["name"], "email": data["email"], "branch": data["branch"]}})
+    return redirect('/voters')
+
+
 def func(pct, allvalues):
     absolute = int(pct / 100.*np.sum(allvalues))
     return "{:.1f}%\n({:d})".format(pct, absolute)
@@ -350,10 +363,14 @@ def visualise():
 @app.route('/publishresult', methods=['POST'])
 @admin_is_required
 def publishresult():
+    cur_time = datetime.now()
     if "google_id" not in session:
         return redirect('/')
     elif session["email"] not in admin_ids:
         return abort(403)
+    elif cur_time > start_time and cur_time < end_time:
+        flash("Voting is still going on", "danger")
+        return redirect('/dashboard')
     candidates = db.candidates.find()
     candidates_map = {}
     for candidate in candidates:
@@ -400,6 +417,17 @@ def timeset():
     global end_time
     start_time = datetime.strptime(data['start'], '%Y-%m-%dT%H:%M')
     end_time = datetime.strptime(data['end'], '%Y-%m-%dT%H:%M')
+    return redirect('/dashboard')
+
+
+@app.route('/checkchain', methods=['POST'])
+@admin_is_required
+def checkchain():
+    verify = Blockchain_votes.check_chain()
+    if verify:
+        flash("Blockchain is valid", category="success")
+    else:
+        flash("Blockchain is invalid", category="danger")
     return redirect('/dashboard')
 
 

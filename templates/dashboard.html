@@ -1,9 +1,25 @@
-{% extends 'admin-template.html' %} {% block content %}
+{% extends 'admin-template.html' %} {% block content %} {% with messages =
+get_flashed_messages(with_categories=true) %} {% if messages %} {% for category,
+message in messages %}
+<div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+  {{ message }}
+  <button
+    type="button"
+    class="btn-close"
+    data-bs-dismiss="alert"
+    aria-label="Close"
+  ></button>
+</div>
+{% endfor %} {% endif %} {% endwith %}
 <div class="row">
   <div class="text-center fw-bolder h2">Election Dashboard</div>
   <hr class="mb-4" />
   <div class="h4 fw-bold">Voting Time</div>
-  <form action="/timeset" method="post" onSubmit="return confirm('Are you sure you wish to set the time?');">
+  <form
+    action="/timeset"
+    method="post"
+    onSubmit="return confirm('Are you sure you wish to set the time?');"
+  >
     <div class="form-group row pt-1">
       <label class="col-sm-2 col-form-label" for="start"
         >Start Date and time</label
@@ -35,7 +51,11 @@
     </div>
   </form>
   <hr class="my-3" />
-  <form method="post" action="/publishresult" onSubmit="return confirm('Are you sure you wish to publish the result?');">
+  <form
+    method="post"
+    action="/publishresult"
+    onSubmit="return confirm('Are you sure you wish to publish the result?');"
+  >
     <div class="row py-1">
       <div class="col-sm-6 my-auto h4 fw-bold" for="publish">
         Publish Election Results
@@ -50,5 +70,18 @@
     </div>
   </form>
   <hr class="my-3" />
-  {% endblock %}
+  <form
+    method="post"
+    action="/checkchain"
+    onSubmit="return confirm('Are you sure you wish to publish the result?');"
+  >
+    <div class="row py-1">
+      <div class="col-sm-6 my-auto h4 fw-bold" for="check">Verify Chain</div>
+      <button id="check" type="submit" class="col-sm-2 btn btn-primary my-auto">
+        Check Chain
+      </button>
+    </div>
+  </form>
+  <hr class="my-3" />
 </div>
+{% endblock %}
