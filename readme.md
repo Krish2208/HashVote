@@ -8,4 +8,4 @@ Welcome a new era of voting unbiased.
 4. Install the required packages by typing ```pip install -r requirements.txt``` in the terminal. If pip is not found, install pip as ```conda install pip```.
 5. Alternatively run ```conda create --name hash-vote --file requirements.txt``` to create an eviornment with the required packages.
 6. Run ```conda install google-auth google-auth-oauthlib``` if facing difficulty with google auth related libraries.
-7. To launch the app type ```python main.py```.
+7. To launch the app run ```python main.py```.
