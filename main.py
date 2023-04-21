@@ -1,4 +1,4 @@
-from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
+from flask import Flask, abort, flash, redirect, render_template, request, session
 import os
 from google.oauth2 import id_token
 import pathlib
