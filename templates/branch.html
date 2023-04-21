@@ -1,54 +1,63 @@
 {% extends 'admin-template.html' %} {% block content %}
-<form action="/branch" , method="post">
-  <div class="form-group row pt-1">
-    <label for="name" class="col-sm-2 col-form-label">Name of the Branch</label>
-    <div class="col-sm-10">
-      <input
-        required
-        type="text"
-        class="form-control"
-        id="name"
-        placeholder="Name of the Branch"
-        name="name"
-      />
+<div class="row">
+  <div class="text-center fw-bolder h2">Branch</div>
+  <hr class="mb-4" />
+  <div class="h4 fw-bold">New Branch</div>
+  <form action="/branch" , method="post">
+    <div class="form-group row pt-1">
+      <label for="name" class="col-sm-2 col-form-label"
+        >Name of the Branch</label
+      >
+      <div class="col-sm-10">
+        <input
+          required
+          type="text"
+          class="form-control"
+          id="name"
+          placeholder="Name of the Branch"
+          name="name"
+        />
+      </div>
     </div>
-  </div>
-  <button type="submit" class="btn btn-primary">Add Branch</button>
-</form>
-<hr />
-<form action="/category" , method="post">
-  <div class="form-group row pt-1">
-    <label for="category" class="col-sm-2 col-form-label"
-      >Name of the Category</label
-    >
-    <div class="col-sm-10">
-      <input
-        required
-        type="text"
-        class="form-control"
-        id="category"
-        placeholder="Name of the Category"
-        name="category"
-      />
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary mt-3">Add Branch</button>
     </div>
-  </div>
-  <div class="form-group row pt-1">
-    <label for="branch" class="col-sm-2 col-form-label">Branch</label>
-    <div class="col-sm-10">
-      <select class="form-control" id="branch" name="branch">
-        {% for branch in branches %}
-        <option value="{{branch._id}}">{{branch.name}}</option>
-        {% endfor %}
-      </select>
+  </form>
+  <hr class="my-3" />
+  <div class="h4 fw-bold">New Category</div>
+  <form action="/category" , method="post">
+    <div class="form-group row pt-1">
+      <label for="category" class="col-sm-2 col-form-label"
+        >Name of the Category</label
+      >
+      <div class="col-sm-10">
+        <input
+          required
+          type="text"
+          class="form-control"
+          id="category"
+          placeholder="Name of the Category"
+          name="category"
+        />
+      </div>
     </div>
-  </div>
-  <button type="submit" class="btn btn-primary">Add Category</button>
-</form>
-<div class="row mt-4">
-  <div class="col-sm-12">
-    <h3>Branch and Categories</h3>
-  </div>
-  <div class="col-md-12 pt-2">
+    <div class="form-group row pt-1">
+      <label for="branch" class="col-sm-2 col-form-label">Branch</label>
+      <div class="col-sm-10">
+        <select class="form-control" id="branch" name="branch">
+          {% for branch in branches %}
+          <option value="{{branch._id}}">{{branch.name}}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary mt-3">Add Category</button>
+    </div>
+  </form>
+  <hr class="my-3" />
+  <div class="h4 fw-bold">Branch and Category</div>
+  <div class="col-md-12 mx-1">
     <table class="table table-striped position-table">
       <thead>
         <tr>
@@ -61,12 +70,13 @@
         <tr>
           <td>{{branch.name}}</td>
           <td>
-            {% for category in branch.categories %} {{category}},&nbsp; {% endfor %}
+            {% for category in branch.categories %} {{category}},&nbsp; {%
+            endfor %}
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-  {% endblock %}
 </div>
+{% endblock %}
