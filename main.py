@@ -187,9 +187,10 @@ def index():
 def role():
     prev = set(Blockchain_voter.last_block.transactions)
     voters = list(db.voters.find({}, {"_id": 0, "email": 1}))
+    voter = {"email": session["email"]}
     if session["email"] in admin_ids:
         return redirect("/dashboard")
-    elif session.get("email") not in voters:
+    elif voter not in voters:
         return redirect("/notvoter")
     elif session.get("email") in prev:
         return redirect("/already")
@@ -323,7 +324,9 @@ def get_positions():
         if "all" in perms:
             perms = ["all"]
         position_data = {"name": data["name"], "permission": perms}
-        db.positions.insert_one(position_data)
+        position = db.positions.insert_one(position_data)
+        uid = unique_id(6)
+        db.candidates.insert_one({"position": str(position.inserted_id), "name": "NOTA", "uid": uid})
         return redirect('/positions')
     positions = db.positions.find()
     pos_list = []
@@ -423,6 +426,17 @@ def delete_voter(id):
         return abort(403)
     db.voters.delete_one({"_id": ObjectId(id)})
     return redirect('/voters')
+
+
+@ app.route('/delete/category/<id>/<category>', methods=['post'])
+def delete_category(id, category):
+    if "google_id" not in session:
+        return redirect('/')
+    elif session["email"] not in admin_ids:
+        return abort(403)
+    db.branch.update_one({"_id": ObjectId(id)}, {
+                         "$pull": {"categories": category}})
+    return redirect('/branch')
 
 
 @ app.route('/edit/voter/<id>', methods=['post'])

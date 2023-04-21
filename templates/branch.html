@@ -70,8 +70,27 @@
         <tr>
           <td>{{branch.name}}</td>
           <td>
-            {% for category in branch.categories %} {{category}},&nbsp; {%
-            endfor %}
+            {% for category in branch.categories %}
+            <div class="cat-pill">
+              {{category}}
+              <form
+                action="/delete/category/{{branch._id}}/{{category}}"
+                method="post"
+                class="form-inline"
+                style="display: inline-block"
+              >
+                <div class="input-group">
+                  <button
+                    type="submit"
+                    class="btn btn-danger btn-sm button-dan"
+                    id="button-addon2"
+                  >
+                    x
+                  </button>
+                </div>
+              </form>
+            </div>
+            {% endfor %}
           </td>
         </tr>
         {% endfor %}
