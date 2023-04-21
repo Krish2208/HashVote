@@ -42,6 +42,15 @@ admin_ids = ['ee210002041@iiti.ac.in',
 start_time = datetime(2021, 4, 1, 0, 0, 0, 0)
 end_time = datetime(2023, 5, 2, 0, 0, 0, 0)
 
+if "voters" not in db.list_collection_names():
+    db.create_collection("voters")
+if "positions" not in db.list_collection_names():
+    db.create_collection("positions")
+if "candidates" not in db.list_collection_names():
+    db.create_collection("candidates")
+if "branch" not in db.list_collection_names():
+    db.create_collection("branch")
+
 voter_validator = {
     "$jsonSchema": {
         "bsonType": "object",
@@ -177,8 +186,11 @@ def index():
 @ login_is_required
 def role():
     prev = set(Blockchain_voter.last_block.transactions)
+    voters = list(db.voters.find({}, {"_id": 0, "email": 1}))
     if session["email"] in admin_ids:
         return redirect("/dashboard")
+    elif session.get("email") not in voters:
+        return redirect("/notvoter")
     elif session.get("email") in prev:
         return redirect("/already")
     else:
@@ -231,6 +243,11 @@ def notime():
     if cur_time > start_time and cur_time < end_time:
         return redirect("/")
     return render_template('notime.html')
+
+
+@ app.route('/notvoter')
+def notvoter():
+    return render_template('notvoter.html')
 
 
 @ app.route('/vote')
@@ -362,7 +379,6 @@ def branch():
     if request.method == 'POST':
         data = request.form
         db.branch.insert_one({"name": data["name"], "categories": []})
-    print(list(db.branch.find()))
     return render_template('branch.html', branches=list(db.branch.find()))
 
 
@@ -373,7 +389,6 @@ def category():
     elif session["email"] not in admin_ids:
         return abort(403)
     data = request.form
-    print(data)
     db.branch.update_one({"_id": ObjectId(data["branch"])}, {
                          "$push": {"categories": data["category"]}})
     return redirect('/branch')
@@ -504,7 +519,6 @@ def timeset():
     elif session["email"] not in admin_ids:
         return abort(403)
     data = request.form
-    print(data)
     global start_time
     global end_time
     start_time = datetime.strptime(data['start'], '%Y-%m-%dT%H:%M')
