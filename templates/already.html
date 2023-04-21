@@ -1,7 +1,19 @@
 {% extends 'base-template.html' %} {% block content %}
-<div class="row m-2 text-center">
-  <h3>Vote for your favorite candidate</h3>
-  <p class="lead">Please follow this link to vote for your favorite candidate:</p>
-  <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0" target="_blank">Vote</a>
+<div class="row m-2 my-3">
+  <div class="text-center">
+    <div class="h2 fw-bold">Vote for your favourite candidate</div>
+    <p class="h5 fst-italic fw-normal">
+      Please follow this link to vote for your favorite candidate:
+    </p>
+    <a
+      class="m-3"
+      href="https://www.youtube.com/watch?v=xvFZjo5PgG0"
+      target="_blank"
+      >Vote Here</a
+    >
+    <p class="my-2">
+      <a class="btn btn-primary mt-3 btn-sm" href="/logout">Logout</a>
+    </p>
+  </div>
 </div>
 {% endblock %}

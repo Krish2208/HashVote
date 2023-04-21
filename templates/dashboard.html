@@ -1,36 +1,54 @@
 {% extends 'admin-template.html' %} {% block content %}
-<div class="h4">Time of start of Voting and End of Voting</div>
-<form action="/timeset" method="post">
-  <div class="form-group row pt-1">
-    <label class="col-sm-2 col-form-label" for="start"
-      >Start Date and time:</label
-    >
-    <div class="col-sm-10">
-      <input
-        class="form-control"
-        type="datetime-local"
-        name="start"
-        id="start"
-        value="{{ start }}"
-      />
+<div class="row">
+  <div class="text-center fw-bolder h2">Election Dashboard</div>
+  <hr class="mb-4" />
+  <div class="h4 fw-bold">Voting Time</div>
+  <form action="/timeset" method="post">
+    <div class="form-group row pt-1">
+      <label class="col-sm-2 col-form-label" for="start"
+        >Start Date and time</label
+      >
+      <div class="col-sm-10">
+        <input
+          class="form-control"
+          type="datetime-local"
+          name="start"
+          id="start"
+          value="{{ start }}"
+        />
+      </div>
     </div>
-  </div>
-  <div class="form-group row pt-1">
-    <label class="col-sm-2 col-form-label" for="end">End Date and time:</label>
-    <div class="col-sm-10">
-      <input
-        class="form-control"
-        type="datetime-local"
-        name="end"
-        id="end"
-        value="{{ end }}"
-      />
+    <div class="form-group row pt-1">
+      <label class="col-sm-2 col-form-label" for="end">End Date and time</label>
+      <div class="col-sm-10">
+        <input
+          class="form-control"
+          type="datetime-local"
+          name="end"
+          id="end"
+          value="{{ end }}"
+        />
+      </div>
     </div>
-  </div>
-  <button type="submit" class="btn btn-primary">Set Time</button>
-</form>
-<form method="post" action="/publishresult">
-  <button type="submit" class="btn btn-primary">Publish Result</button>
-</form>
-<hr />
-{% endblock %}
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary mt-3">Set Time</button>
+    </div>
+  </form>
+  <hr class="my-3" />
+  <form method="post" action="/publishresult">
+    <div class="row py-1">
+      <div class="col-sm-6 my-auto h4 fw-bold" for="publish">
+        Publish Election Results
+      </div>
+      <button
+        id="publish"
+        type="submit"
+        class="col-sm-2 btn btn-primary my-auto"
+      >
+        Publish Result
+      </button>
+    </div>
+  </form>
+  <hr class="my-3" />
+  {% endblock %}
+</div>

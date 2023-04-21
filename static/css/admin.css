@@ -1,6 +1,7 @@
 body {
   background-color: #f1f1f1;
   font-family: "Open Sans", sans-serif;
+  overflow: hidden;
 }
 
 .app-header {
@@ -89,6 +90,7 @@ nav {
 }
 
 .display-area {
+  overflow: auto;
   position: absolute;
   left: 250px;
   width: calc(100% - 250px);

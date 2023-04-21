@@ -36,7 +36,7 @@ client = pymongo.MongoClient(
     "mongodb+srv://diwankrish17:N4lTSO9A3DJ6sRYW@cluster0.wlsbebc.mongodb.net/?retryWrites=true&w=majority")
 db = client.test
 
-admin_ids = ['ee210002041@iiti.ac.in']
+admin_ids = ['ee210002041@iiti.ac.in', 'cse210001083@iiti.ac.in', 'cse210001034@iiti.ac.in']
 
 start_time = datetime(2021, 4, 1, 0, 0, 0, 0)
 end_time = datetime(2023, 5, 2, 0, 0, 0, 0)
