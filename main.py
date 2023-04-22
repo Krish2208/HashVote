@@ -14,26 +14,28 @@ import blockchain
 from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
+from os.path import join, dirname
+from dotenv import load_dotenv
 
 app = Flask(__name__)
-app.secret_key = "hashvote"
-client_secret = os.path.join(pathlib.Path(
-    __file__).parent, "client_secret.json")
-GOOGLE_CLIENT_ID = "659786496565-bman97c446r9loq8m36f9ju3kmnfa3g7.apps.googleusercontent.com"
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
+app.secret_key = os.environ.get("SECRET_KEY")
+client_secret = os.path.join(pathlib.Path(__file__).parent, "client_secret.json")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 flow = flow.Flow.from_client_secrets_file(
     client_secrets_file=client_secret,
     scopes=['https://www.googleapis.com/auth/userinfo.email',
             'https://www.googleapis.com/auth/userinfo.profile', 'openid'],
-    redirect_uri='http://localhost:5000/callback'
+    redirect_uri=os.environ.get("REDIRECT_URI")
 )
 Blockchain_votes = blockchain.Blockchain()
 Blockchain_voter = blockchain.Blockchain()
 Blockchain_votes.create_genesis_block()
 Blockchain_voter.create_genesis_block_set()
 
-client = pymongo.MongoClient(
-    "mongodb+srv://diwankrish17:N4lTSO9A3DJ6sRYW@cluster0.wlsbebc.mongodb.net/?retryWrites=true&w=majority&authSource=admin")
+client = pymongo.MongoClient(os.environ.get("MONGO_URI"))
 db = client.test
 
 admin_ids = ['ee210002041@iiti.ac.in',
