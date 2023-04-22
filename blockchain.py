@@ -128,3 +128,4 @@ class Blockchain:
             for i in range(0, len(votes)):
                 result[votes[i]]= result[votes[i]]+1
         return result
+    
