@@ -21,7 +21,8 @@ app = Flask(__name__)
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 app.secret_key = os.environ.get("SECRET_KEY")
-client_secret = os.path.join(pathlib.Path(__file__).parent, "client_secret.json")
+client_secret = os.path.join(pathlib.Path(
+    __file__).parent, "client_secret.json")
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 flow = flow.Flow.from_client_secrets_file(
@@ -249,6 +250,7 @@ def notime():
 
 
 @ app.route('/notvoter')
+@ login_is_required
 def notvoter():
     return render_template('notvoter.html')
 
@@ -328,7 +330,8 @@ def get_positions():
         position_data = {"name": data["name"], "permission": perms}
         position = db.positions.insert_one(position_data)
         uid = unique_id(6)
-        db.candidates.insert_one({"position": str(position.inserted_id), "name": "NOTA", "uid": uid})
+        db.candidates.insert_one(
+            {"position": str(position.inserted_id), "name": "NOTA", "uid": uid})
         return redirect('/positions')
     positions = db.positions.find()
     pos_list = []
@@ -376,11 +379,8 @@ def get_voters():
 
 
 @ app.route('/branch', methods=['GET', 'POST'])
+@ admin_is_required
 def branch():
-    if "google_id" not in session:
-        return redirect('/')
-    elif session["email"] not in admin_ids:
-        return abort(403)
     if request.method == 'POST':
         data = request.form
         db.branch.insert_one({"name": data["name"], "categories": []})
@@ -388,11 +388,8 @@ def branch():
 
 
 @ app.route('/category', methods=['POST'])
+@ admin_is_required
 def category():
-    if "google_id" not in session:
-        return redirect('/')
-    elif session["email"] not in admin_ids:
-        return abort(403)
     data = request.form
     db.branch.update_one({"_id": ObjectId(data["branch"])}, {
                          "$push": {"categories": data["category"]}})
@@ -459,6 +456,7 @@ def func(pct, allvalues):
 
 
 @ app.route('/visualise')
+@ admin_is_required
 def visualise():
     plot_data = {}
     positions = list(db.positions.find())
@@ -508,9 +506,8 @@ def publishresult():
 
 
 @ app.route('/result')
+@ login_is_required
 def result():
-    if "google_id" not in session:
-        return redirect('/')
     positions = list(db.positions.find())
     data_list = []
     for position in positions:
