@@ -1,4 +1,4 @@
-from flask import Flask, abort, redirect, render_template, request, session
+from flask import Flask, abort, flash, redirect, render_template, request, session
 import os
 from google.oauth2 import id_token
 import pathlib
@@ -33,13 +33,115 @@ Blockchain_votes.create_genesis_block()
 Blockchain_voter.create_genesis_block_set()
 
 client = pymongo.MongoClient(
-    "mongodb+srv://diwankrish17:N4lTSO9A3DJ6sRYW@cluster0.wlsbebc.mongodb.net/?retryWrites=true&w=majority")
+    "mongodb+srv://diwankrish17:N4lTSO9A3DJ6sRYW@cluster0.wlsbebc.mongodb.net/?retryWrites=true&w=majority&authSource=admin")
 db = client.test
 
-admin_ids = ['ee210002041@iiti.ac.in', 'cse210001083@iiti.ac.in', 'cse210001034@iiti.ac.in']
+admin_ids = ['ee210002041@iiti.ac.in',
+             'cse210001083@iiti.ac.in', 'cse210001034@iiti.ac.in']
 
 start_time = datetime(2021, 4, 1, 0, 0, 0, 0)
 end_time = datetime(2023, 5, 2, 0, 0, 0, 0)
+
+if "voters" not in db.list_collection_names():
+    db.create_collection("voters")
+if "positions" not in db.list_collection_names():
+    db.create_collection("positions")
+if "candidates" not in db.list_collection_names():
+    db.create_collection("candidates")
+if "branch" not in db.list_collection_names():
+    db.create_collection("branch")
+
+voter_validator = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["email", "name", "branch"],
+        "properties": {
+            "email": {
+                "bsonType": "string",
+                "description": "must be a string and is required"
+            },
+            "name": {
+                "bsonType": "string",
+                "description": "must be a string and is required"
+            },
+            "branch": {
+                "bsonType": "string",
+                "description": "must be a string and is required"
+            }
+        }
+    }
+}
+db.command("collMod", "voters", validator=voter_validator)
+
+position_validator = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["name", "permission"],
+        "properties": {
+            "name": {
+                "bsonType": "string",
+                "description": "must be a string and is required"
+            },
+            "permission": {
+                "bsonType": "array",
+                "description": "must be an array and is required",
+                "items": {
+                    "bsonType": "string",
+                    "description": "must be a string and is required"
+                }
+            }
+        }
+    }
+}
+db.command("collMod", "positions", validator=position_validator)
+
+candidate_validator = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["name", "position", "uid"],
+        "properties": {
+            "name": {
+                "bsonType": "string",
+                "description": "must be a string and is required"
+            },
+            "position": {
+                "bsonType": "string",
+                "description": "must be a string and is required"
+            },
+            "uid": {
+                "bsonType": "string",
+                "description": "must be a string and is required"
+            },
+            "votes": {
+                "bsonType": "int",
+                "description": "must be an int"
+            }
+        }
+    }
+}
+db.command("collMod", "candidates", validator=candidate_validator)
+
+branch_validator = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["name", "categories"],
+        "properties": {
+            "name": {
+                "bsonType": "string",
+                "description": "must be a string and is required"
+            },
+            "categories": {
+                "bsonType": "array",
+                "description": "must be an array and is required",
+                "items": {
+                    "bsonType": "string",
+                    "description": "must be a string and is required"
+                }
+            }
+        }
+    }
+}
+db.command("collMod", "branch", validator=branch_validator)
 
 
 def unique_id(size):
@@ -73,26 +175,30 @@ def admin_is_required(function):
     return admin_wrap
 
 
-@app.route('/')
+@ app.route('/')
 def index():
     if "google_id" in session:
         return redirect("/role")
     return render_template('login.html')
 
 
-@app.route('/role')
-@login_is_required
+@ app.route('/role')
+@ login_is_required
 def role():
     prev = set(Blockchain_voter.last_block.transactions)
+    voters = list(db.voters.find({}, {"_id": 0, "email": 1}))
+    voter = {"email": session["email"]}
     if session["email"] in admin_ids:
         return redirect("/dashboard")
+    elif voter not in voters:
+        return redirect("/notvoter")
     elif session.get("email") in prev:
         return redirect("/already")
     else:
         return redirect("/vote")
 
 
-@app.route('/login/google')
+@ app.route('/login/google')
 def login_google():
     authorization_url, state = flow.authorization_url()
     session['state'] = state
@@ -101,14 +207,14 @@ def login_google():
     return redirect(authorization_url)
 
 
-@app.route("/logout")
-@login_is_required
+@ app.route("/logout")
+@ login_is_required
 def logout():
     session.clear()
     return redirect("/")
 
 
-@app.route('/callback')
+@ app.route('/callback')
 def callback():
     flow.fetch_token(authorization_response=request.url)
     if session['state'] != request.args["state"]:
@@ -132,7 +238,7 @@ def callback():
     return redirect("/role")
 
 
-@app.route('/notime')
+@ app.route('/notime')
 def notime():
     cur_time = datetime.now()
     if cur_time > start_time and cur_time < end_time:
@@ -140,8 +246,13 @@ def notime():
     return render_template('notime.html')
 
 
-@app.route('/vote')
-@login_is_required
+@ app.route('/notvoter')
+def notvoter():
+    return render_template('notvoter.html')
+
+
+@ app.route('/vote')
+@ login_is_required
 def vote_candidate():
     prev = set(Blockchain_voter.last_block.transactions)
     if session.get("email") in prev:
@@ -166,20 +277,20 @@ def vote_candidate():
     return render_template('voting.html', data=data_list)
 
 
-@app.route('/already')
-@login_is_required
+@ app.route('/already')
+@ login_is_required
 def already():
     return render_template('already.html')
 
 
-@app.route('/thanks')
-@login_is_required
+@ app.route('/thanks')
+@ login_is_required
 def thanks():
     return render_template('thanks.html')
 
 
-@app.route('/voting', methods=['POST'])
-@login_is_required
+@ app.route('/voting', methods=['POST'])
+@ login_is_required
 def voting():
     prev = set(Blockchain_voter.last_block.transactions)
     data = request.form
@@ -198,14 +309,14 @@ def voting():
     return redirect('/thanks')
 
 
-@app.route('/dashboard')
-@admin_is_required
+@ app.route('/dashboard')
+@ admin_is_required
 def dashboard():
     return render_template('dashboard.html', start=start_time, end=end_time)
 
 
-@app.route('/positions', methods=['GET', 'POST'])
-@admin_is_required
+@ app.route('/positions', methods=['GET', 'POST'])
+@ admin_is_required
 def get_positions():
     if request.method == 'POST':
         data = request.form
@@ -213,7 +324,9 @@ def get_positions():
         if "all" in perms:
             perms = ["all"]
         position_data = {"name": data["name"], "permission": perms}
-        db.positions.insert_one(position_data)
+        position = db.positions.insert_one(position_data)
+        uid = unique_id(6)
+        db.candidates.insert_one({"position": str(position.inserted_id), "name": "NOTA", "uid": uid})
         return redirect('/positions')
     positions = db.positions.find()
     pos_list = []
@@ -223,8 +336,8 @@ def get_positions():
     return render_template('positions.html', positions=pos_list, branch=branch_list)
 
 
-@app.route('/candidates', methods=['GET', 'POST'])
-@admin_is_required
+@ app.route('/candidates', methods=['GET', 'POST'])
+@ admin_is_required
 def get_candidates():
     if request.method == 'POST':
         data = request.form
@@ -246,13 +359,13 @@ def get_candidates():
     return render_template('candidates.html', positions=pos_list, candidates=candidates_list)
 
 
-@app.route('/voters', methods=['GET', 'POST'])
-@admin_is_required
+@ app.route('/voters', methods=['GET', 'POST'])
+@ admin_is_required
 def get_voters():
     if request.method == 'POST':
         data = request.form
         voter_data = {"name": data["name"], "email": data["email"],
-                      "branch": data["branch"], "voted": "false"}
+                      "branch": data["branch"]}
         db.voters.insert_one(voter_data)
         return redirect('/voters')
     voters_list = list(db.voters.find())
@@ -260,7 +373,7 @@ def get_voters():
     return render_template('voters.html', voters=voters_list, branch=branch_list)
 
 
-@app.route('/branch', methods=['GET', 'POST'])
+@ app.route('/branch', methods=['GET', 'POST'])
 def branch():
     if "google_id" not in session:
         return redirect('/')
@@ -269,24 +382,22 @@ def branch():
     if request.method == 'POST':
         data = request.form
         db.branch.insert_one({"name": data["name"], "categories": []})
-    print(list(db.branch.find()))
     return render_template('branch.html', branches=list(db.branch.find()))
 
 
-@app.route('/category', methods=['POST'])
+@ app.route('/category', methods=['POST'])
 def category():
     if "google_id" not in session:
         return redirect('/')
     elif session["email"] not in admin_ids:
         return abort(403)
     data = request.form
-    print(data)
     db.branch.update_one({"_id": ObjectId(data["branch"])}, {
                          "$push": {"categories": data["category"]}})
     return redirect('/branch')
 
 
-@app.route('/delete/position/<id>')
+@ app.route('/delete/position/<id>', methods=['post'])
 def delete_position(id):
     if "google_id" not in session:
         return redirect('/')
@@ -297,7 +408,7 @@ def delete_position(id):
     return redirect('/positions')
 
 
-@app.route('/delete/candidate/<id>')
+@ app.route('/delete/candidate/<id>', methods=['post'])
 def delete_candidate(id):
     if "google_id" not in session:
         return redirect('/')
@@ -307,7 +418,7 @@ def delete_candidate(id):
     return redirect('/candidates')
 
 
-@app.route('/delete/voter/<id>')
+@ app.route('/delete/voter/<id>', methods=['post'])
 def delete_voter(id):
     if "google_id" not in session:
         return redirect('/')
@@ -317,12 +428,35 @@ def delete_voter(id):
     return redirect('/voters')
 
 
+@ app.route('/delete/category/<id>/<category>', methods=['post'])
+def delete_category(id, category):
+    if "google_id" not in session:
+        return redirect('/')
+    elif session["email"] not in admin_ids:
+        return abort(403)
+    db.branch.update_one({"_id": ObjectId(id)}, {
+                         "$pull": {"categories": category}})
+    return redirect('/branch')
+
+
+@ app.route('/edit/voter/<id>', methods=['post'])
+def edit_voter(id):
+    if "google_id" not in session:
+        return redirect('/')
+    elif session["email"] not in admin_ids:
+        return abort(403)
+    data = request.form
+    db.voters.update_one({"_id": ObjectId(id)}, {"$set": {
+                         "name": data["name"], "email": data["email"], "branch": data["branch"]}})
+    return redirect('/voters')
+
+
 def func(pct, allvalues):
     absolute = int(pct / 100.*np.sum(allvalues))
     return "{:.1f}%\n({:d})".format(pct, absolute)
 
 
-@app.route('/visualise')
+@ app.route('/visualise')
 def visualise():
     plot_data = {}
     positions = list(db.positions.find())
@@ -347,13 +481,17 @@ def visualise():
         plt.show()
 
 
-@app.route('/publishresult', methods=['POST'])
-@admin_is_required
+@ app.route('/publishresult', methods=['POST'])
+@ admin_is_required
 def publishresult():
+    cur_time = datetime.now()
     if "google_id" not in session:
         return redirect('/')
     elif session["email"] not in admin_ids:
         return abort(403)
+    elif cur_time > start_time and cur_time < end_time:
+        flash("Voting is still going on", "danger")
+        return redirect('/dashboard')
     candidates = db.candidates.find()
     candidates_map = {}
     for candidate in candidates:
@@ -367,7 +505,7 @@ def publishresult():
     return redirect('/')
 
 
-@app.route('/result')
+@ app.route('/result')
 def result():
     if "google_id" not in session:
         return redirect('/')
@@ -387,19 +525,29 @@ def result():
     return render_template('result.html', candidates=data_list)
 
 
-@app.route('/timeset', methods=['POST'])
-@admin_is_required
+@ app.route('/timeset', methods=['POST'])
+@ admin_is_required
 def timeset():
     if "google_id" not in session:
         return redirect('/')
     elif session["email"] not in admin_ids:
         return abort(403)
     data = request.form
-    print(data)
     global start_time
     global end_time
     start_time = datetime.strptime(data['start'], '%Y-%m-%dT%H:%M')
     end_time = datetime.strptime(data['end'], '%Y-%m-%dT%H:%M')
+    return redirect('/dashboard')
+
+
+@ app.route('/checkchain', methods=['POST'])
+@ admin_is_required
+def checkchain():
+    verify = Blockchain_votes.check_chain()
+    if verify:
+        flash("Blockchain is valid", category="success")
+    else:
+        flash("Blockchain is invalid", category="danger")
     return redirect('/dashboard')
 
 
