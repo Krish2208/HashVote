@@ -127,3 +127,87 @@ class Blockchain:
             for i in range(0, len(votes)):
                 result[votes[i]]= result[votes[i]]+1
         return result
+    
+
+    """
+#Code for decentralisation and peer to peer. Use in main.py to implement
+peers= set()
+@app.route('/register_node', methods=['POST'])
+def register_new_peers():
+    node_address = request.get_json()["node_address"]
+    if not node_address:
+        return "Invalid data", 400
+    # Add the node to the peer list
+    peers.add(node_address)
+    # Return the blockchain to the newly registered node so that it can sync
+    return get_chain()
+
+  
+@app.route('/register_with', methods=['POST'])
+def register_with_existing_node():
+    
+    node_address = request.get_json()["node_address"]
+    if not node_address:
+        return "Invalid data", 400
+
+    data = {"node_address": request.host_url}
+    headers = {'Content-Type': "application/json"}
+
+    # Make a request to register with remote node and obtain information
+    response = requests.post(node_address + "/register_node",
+                             data=json.dumps(data), headers=headers)
+
+    if response.status_code == 200:
+        global blockchain
+        global peers
+        # update chain and the peers
+        chain_dump = response.json()['chain']
+        blockchain = create_chain_from_dump(chain_dump)
+        peers.update(response.json()['peers'])
+        return "Registration successful", 200
+    else:
+        # if something goes wrong, pass it on to the API response
+        return response.content, response.status_code
+ 
+
+def create_chain_from_dump(chain_dump):
+    blockchain = Blockchain()
+    for idx, block_data in enumerate(chain_dump):
+        block = Block(block_data["index"],
+                      block_data["transactions"],
+                      block_data["timestamp"],
+                      block_data["previous_hash"])
+        proof = block_data['hash']
+        if idx > 0:
+            added = blockchain.add_block(block, proof)
+            if not added:
+                raise Exception("The chain dump is tampered!!")
+        else:  # the block is a genesis block, no verification needed
+            blockchain.chain.append(block)
+    return blockchain
+
+    def consensus(peers):
+        global blockchain
+        longest_chain = None
+        current_len = len(blockchain.chain)
+
+        for node in peers:
+            response = requests.get('{}/chain'.format(node))
+            length = response.json()['length']
+            chain = response.json()['chain']
+            if length > current_len and blockchain.check_chain_validity(chain):
+                # Longer valid chain found!
+                current_len = length
+                longest_chain = chain
+
+        if longest_chain:
+            blockchain = longest_chain
+            return True
+
+        return False
+
+    def announce_new_block(block):
+    for peer in peers:
+        url = "{}add_block".format(peer)
+        requests.post(url, data=json.dumps(block.__dict__, sort_keys=True)) 
+"""
