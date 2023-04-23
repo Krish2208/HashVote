@@ -1,4 +1,4 @@
-# HashVote
+# Hash Vote
 Welcome a new era of voting unbiased.
 # a. Installation:
 1. Firstly create a new folder and navigate to the folder.
