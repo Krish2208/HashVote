@@ -39,31 +39,51 @@
             <li class="nav-list-item">
               <i class="fa-solid fa-home"></i>
               <span>
-                <a href="/dashboard">Dashboard</a>
+                <a
+                  href="/dashboard"
+                  onclick="document.getElementById('spinner').style.display='block'"
+                  >Dashboard</a
+                >
               </span>
             </li>
             <li class="nav-list-item">
               <i class="fa-solid fa-people-group"></i>
               <span>
-                <a href="/voters">Voters</a>
+                <a
+                  href="/voters"
+                  onclick="document.getElementById('spinner').style.display='block'"
+                  >Voters</a
+                >
               </span>
             </li>
             <li class="nav-list-item">
               <i class="fa-solid fa-person"></i>
               <span>
-                <a href="/candidates">Candidates</a>
+                <a
+                  href="/candidates"
+                  onclick="document.getElementById('spinner').style.display='block'"
+                  >Candidates</a
+                >
               </span>
             </li>
             <li class="nav-list-item">
               <i class="fa-solid fa-address-card"></i>
               <span>
-                <a href="/positions">Positions</a>
+                <a
+                  href="/positions"
+                  onclick="document.getElementById('spinner').style.display='block'"
+                  >Positions</a
+                >
               </span>
             </li>
             <li class="nav-list-item">
               <i class="fa-solid fa-chalkboard"></i>
               <span>
-                <a href="/branch">Branch</a>
+                <a
+                  href="/branch"
+                  onclick="document.getElementById('spinner').style.display='block'"
+                  >Branch</a
+                >
               </span>
             </li>
           </ul>
@@ -92,7 +112,11 @@
             ></button>
           </div>
           <div class="modal-body">
-            <form id="edit_voter" method="post">
+            <form
+              id="edit_voter"
+              method="post"
+              onSubmit="document.getElementById('spinner').style.display='block';"
+            >
               <div class="form-group row pt-2">
                 <label for="name" class="col-sm-2 col-form-label">Name</label>
                 <div class="col-sm-10">
@@ -141,12 +165,45 @@
                 </div>
               </div>
               <div class="text-center">
-                <button type="submit" class="btn btn-primary mt-3">
+                <button
+                  type="submit"
+                  class="btn btn-primary mt-3"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                >
                   Edit Voter
                 </button>
               </div>
             </form>
           </div>
+        </div>
+      </div>
+    </div>
+    <!--Loading Screen-->
+    <div class="loading-screen" id="spinner" style="display: none">
+      <div
+        class="loading-screen-content"
+        style="
+          z-index: 10;
+          background-color: rgb(42, 42, 42);
+          opacity: 0.8;
+          height: 100vh;
+          width: 100vw;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          align-items: center;
+          justify-content: center;
+          display: flex;
+        "
+      >
+        <div
+          class="spinner-border"
+          style="width: 3rem; height: 3rem; color: white"
+          role="status"
+        >
+          <span class="visually-hidden">Loading...</span>
         </div>
       </div>
     </div>
