@@ -46,12 +46,12 @@ client = pymongo.MongoClient(os.environ.get("MONGO_URI"))
 db = client.test
 
 # Set the Admin IDs
-admin_ids = ['ee210002041@iiti.ac.in',
-             'cse210001083@iiti.ac.in', 'cse210001034@iiti.ac.in']
+admin_ids = ['ee210002065@iiti.ac.in', 'ee210002041@iiti.ac.in',
+             'cse210001083@iiti.ac.in']
 
 # Default start and end time of the elections
 start_time = datetime(2021, 4, 1, 0, 0, 0, 0)
-end_time = datetime(2023, 5, 2, 0, 0, 0, 0)
+end_time = datetime(2023, 4, 2, 0, 0, 0, 0)
 
 
 # Schema Rules for MongoDB
@@ -168,11 +168,8 @@ def unique_id(size):
 # Wrapper function for checking if user is logged in
 def login_is_required(function):
     def wrapper(*args, **kwargs):
-        cur_time = datetime.now()
         if "google_id" not in session:
             return redirect("/")
-        elif cur_time < start_time or cur_time > end_time:
-            return redirect("/notime")
         else:
             return function()
     wrapper.__name__ = function.__name__
@@ -205,12 +202,15 @@ def index():
 @ login_is_required
 def role():
     prev = set(Blockchain_voter.last_block.transactions)
+    cur_time = datetime.now()
     voters = list(db.voters.find({}, {"_id": 0, "email": 1}))
     voter = {"email": session["email"]}
     if session["email"] in admin_ids:
         return redirect("/dashboard")
     elif voter not in voters:
         return redirect("/notvoter")
+    elif cur_time < start_time or cur_time > end_time:
+        return redirect("/notime")
     elif session.get("email") in prev:
         return redirect("/already")
     else:
